@@ -1,37 +1,53 @@
-// Import Express.js
-const express = require('express');
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Embedded Signup Test</title>
+  <script>
+    window.fbAsyncInit = function() {
+      FB.init({
+        appId            : 'YOUR_APP_ID',  // Replace with your BSP App ID
+        autoLogAppEvents : true,
+        xfbml            : true,
+        version          : 'v20.0'
+      });
+    };
+  </script>
+  <script async defer crossorigin="anonymous"
+    src="https://connect.facebook.net/en_US/sdk.js"></script>
+</head>
+<body>
+  <button id="login-btn" style="background-color: #1877f2; border: 0; border-radius: 4px; color: #fff; cursor: pointer; font-family: Helvetica, Arial, sans-serif; font-size: 16px; font-weight: bold; height: 40px; padding: 0 24px;">
+    Launch Embedded Signup
+  </button>
+  <script type="text/javascript">
+    document.getElementById('login-btn').onclick = () =>
+      FB.login(response => {
+        console.log(response);
+      }, {
+        config_id: 'YOUR_CONFIG_ID',  // Replace with your Embedded Signup Config ID
+        response_type: 'code',
+        override_default_response_type: true,
+        scope: 'whatsapp_business_management',
+        extras: {
+          feature: 'whatsapp_embedded_signup',
+          setup: {}
+        }
+      });
 
-// Create an Express app
-const app = express();
-
-// Middleware to parse JSON bodies
-app.use(express.json());
-
-// Set port and verify_token
-const port = process.env.PORT || 3000;
-const verifyToken = process.env.VERIFY_TOKEN;
-
-// Route for GET requests
-app.get('/', (req, res) => {
-  const { 'hub.mode': mode, 'hub.challenge': challenge, 'hub.verify_token': token } = req.query;
-
-  if (mode === 'subscribe' && token === verifyToken) {
-    console.log('WEBHOOK VERIFIED');
-    res.status(200).send(challenge);
-  } else {
-    res.status(403).end();
-  }
-});
-
-// Route for POST requests
-app.post('/', (req, res) => {
-  const timestamp = new Date().toISOString().replace('T', ' ').slice(0, 19);
-  console.log(`\n\nWebhook received ${timestamp}\n`);
-  console.log(JSON.stringify(req.body, null, 2));
-  res.status(200).end();
-});
-
-// Start the server
-app.listen(port, () => {
-  console.log(`\nListening on port ${port}\n`);
-});
+    window.addEventListener('message', (event) => {
+      if (event.origin !== "https://www.facebook.com" && event.origin !== "https://web.facebook.com") {
+        return;
+      }
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === 'WA_EMBEDDED_SIGNUP' && data.event === 'FINISH') {
+          const { phone_number_id, waba_id } = data.data;
+          console.log('Onboarded WABA ID:', waba_id, 'Phone Number ID:', phone_number_id);
+        }
+      } catch {
+        // Ignore non-JSON messages
+      }
+    });
+  </script>
+</body>
+</html>

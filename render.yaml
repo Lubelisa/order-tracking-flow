@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: webhook-listener
+    runtime: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Uncomment if using webhook signature verification
+      # - key: WEBHOOK_SECRET
+      #   sync: false  # prompts you to set the value in Render dashboard
